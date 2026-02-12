@@ -1,184 +1,931 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Barcode Scanner</title>
-
     <script src="https://unpkg.com/@zxing/library@latest"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1a1a1a;
+            --border-color: #2a2a2a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #00d4ff;
+            --accent-dim: #0099cc;
+            --success: #00ff88;
+            --danger: #ff4444;
+            --warning: #ffaa00;
+        }
+
         body {
-            font-family: Arial;
-            background: #111;
-            color: white;
-            text-align: center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 0;
+            line-height: 1.6;
         }
 
-        video {
-            width: 95%;
-            max-width: 400px;
-            border-radius: 10px;
-            margin-top: 10px;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
-        button {
-            padding: 10px 20px;
-            margin: 10px;
-            border: none;
+        .header {
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .scanner-section {
+            grid-column: 1;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        #video {
+            width: 100%;
+            display: block;
+            aspect-ratio: 4/3;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scan-frame {
+            width: 200px;
+            height: 200px;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            animation: scan 2s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+
+            0%,
+            100% {
+                top: 0;
+                opacity: 0.7;
+            }
+
+            50% {
+                top: 198px;
+                opacity: 1;
+            }
+        }
+
+        .status-bar {
+            margin-top: 15px;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+
+        .status-indicator.active {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .controls-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .start {
-            background: #4CAF50;
+        .btn:hover:not(:disabled) {
+            background: var(--border-color);
+            border-color: var(--text-secondary);
         }
 
-        .stop {
-            background: #f44336;
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
         }
 
-        .export {
-            background: #2196F3;
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
-        textarea {
-            width: 95%;
-            max-width: 400px;
-            height: 180px;
-            background: #1e1e1e;
-            color: #00ffcc;
-            border: 1px solid #333;
-            border-radius: 5px;
-            padding: 10px;
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-dim);
+            border-color: var(--accent-dim);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #cc3333;
+            border-color: #cc3333;
+        }
+
+        .results-section {
+            grid-column: 2;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .results-list {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .results-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .results-list::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .results-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .results-list::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        .result-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 40px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            transition: background 0.15s ease;
+        }
+
+        .result-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-index {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .result-code {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .result-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        .export-section {
+            grid-column: 1 / -1;
+        }
+
+        .export-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .input-field {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-family: 'Monaco', 'Courier New', monospace;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        .export-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-message.show {
+            display: flex;
+        }
+
+        .status-message.success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--success);
+        }
+
+        .status-message.error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: var(--danger);
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .scanner-section,
+            .results-section,
+            .export-section {
+                grid-column: 1;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .export-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <div class="logo-text">
+                        <h1>Barcode Scanner</h1>
+                        <p>Professional Data Capture System</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <h2>Barcode Scanner</h2>
+        <div class="main-grid">
+            <!-- Scanner Section -->
+            <div class="card scanner-section">
+                <div class="card-header">
+                    <h2 class="card-title">Camera Feed</h2>
+                </div>
 
-    <video id="video"></video>
+                <div class="video-wrapper">
+                    <video id="video"></video>
+                    <div class="video-overlay" id="scanOverlay" style="display: none;">
+                        <div class="scan-frame">
+                            <div class="scan-line"></div>
+                        </div>
+                    </div>
+                </div>
 
-    <div>
-        <button class="start" onclick="start()">Start</button>
-        <button class="stop" onclick="stop()">Stop</button>
-        <button class="export" onclick="exportReset()">Export & Reset</button>
+                <div class="status-bar">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <span id="statusText">Ready to scan</span>
+                </div>
+
+                <div class="controls-grid">
+                    <button class="btn btn-primary" onclick="start()" id="startBtn">
+                        <span>▶</span> Start
+                    </button>
+                    <button class="btn" onclick="stop()" id="stopBtn" disabled>
+                        <span>⏸</span> Stop
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="card results-section">
+                <div class="card-header">
+                    <h2 class="card-title">Scanned Data</h2>
+                </div>
+
+                <div class="stats-bar">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Items</div>
+                        <div class="stat-value" id="totalCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Session Time</div>
+                        <div class="stat-value" id="sessionTime">00:00</div>
+                    </div>
+                </div>
+
+                <div class="results-list" id="resultsList">
+                    <div class="empty-state">
+                        <div class="empty-icon">📊</div>
+                        <p>No data captured yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Section -->
+            <div class="card export-section">
+                <div class="card-header">
+                    <h2 class="card-title">Export Options</h2>
+                </div>
+
+                <div class="export-grid">
+                    <div class="input-group">
+                        <label class="input-label">Google Sheets URL (Optional)</label>
+                        <input type="text" class="input-field" id="sheetsUrl"
+                            placeholder="https://docs.google.com/spreadsheets/d/...">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Quick Actions</label>
+                        <button class="btn" onclick="clearAll()">
+                            <span>🗑</span> Clear Data
+                        </button>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="btn" onclick="exportToSheets()">
+                        <span>📤</span> Send to Sheets
+                    </button>
+                    <button class="btn" onclick="copyToClipboard()">
+                        <span>📋</span> Copy to Clipboard
+                    </button>
+                    <button class="btn" onclick="exportExcel()">
+                        <span>📊</span> Download Excel
+                    </button>
+                    <button class="btn" onclick="exportCSV()">
+                        <span>📄</span> Download CSV
+                    </button>
+                </div>
+
+                <div class="status-message" id="exportStatus"></div>
+            </div>
+        </div>
     </div>
 
-    <p id="status">Camera stopped</p>
-
-    <textarea id="list"></textarea>
-
     <script>
-
         let codeReader;
         let scanning = false;
         let scanned = [];
+        let sessionStart = null;
+        let timerInterval = null;
 
         async function start() {
-
             try {
-
-                document.getElementById("status").innerText =
-                    "Requesting camera...";
+                updateStatus("Initializing camera...", false);
 
                 codeReader = new ZXing.BrowserMultiFormatReader();
-
-                const devices =
-                    await codeReader.listVideoInputDevices();
+                const devices = await codeReader.listVideoInputDevices();
 
                 if (devices.length === 0) {
-                    alert("No camera found");
+                    showMessage("No camera found on this device", "error");
+                    updateStatus("No camera detected", false);
                     return;
                 }
 
-                const rear =
-                    devices[devices.length - 1].deviceId;
+                const rear = devices[devices.length - 1].deviceId;
 
                 await codeReader.decodeFromVideoDevice(
                     rear,
                     'video',
                     (result, err) => {
-
                         if (result) {
-
                             let text = result.text;
-
-                            document.getElementById("status").innerText =
-                                "Detected: " + text;
-
-                            if (!scanned.includes(text)) {
-                                scanned.push(text);
-                                updateList();
+                            if (!scanned.some(item => item.code === text)) {
+                                addScannedItem(text);
                             }
                         }
-
                         if (err && !(err instanceof ZXing.NotFoundException)) {
                             console.error(err);
                         }
-
                     }
                 );
 
                 scanning = true;
+                sessionStart = Date.now();
+                startTimer();
 
-                document.getElementById("status").innerText =
-                    "Scanning...";
+                document.getElementById('scanOverlay').style.display = 'flex';
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
 
-            }
-
-            catch (e) {
-
+                updateStatus("Scanning active", true);
+                showMessage("Scanner is active", "success");
+            } catch (e) {
                 console.error(e);
-
-                document.getElementById("status").innerText =
-                    "Camera error: " + e.message;
-
-                alert("Camera blocked. Use HTTPS.");
-
+                updateStatus("Camera error", false);
+                showMessage("Camera access denied. Please allow permissions.", "error");
             }
         }
 
         function stop() {
-
             if (!scanning) return;
 
             codeReader.reset();
-
             scanning = false;
+            stopTimer();
 
-            document.getElementById("status").innerText =
-                "Stopped";
+            document.getElementById('scanOverlay').style.display = 'none';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+
+            updateStatus("Scanner stopped", false);
         }
 
-        function updateList() {
+        function addScannedItem(code) {
+            const timestamp = new Date();
+            scanned.push({
+                code: code,
+                time: timestamp.toLocaleTimeString(),
+                date: timestamp.toLocaleDateString(),
+                timestamp: timestamp
+            });
 
-            document.getElementById("list").value =
-                scanned.join("\n");
+            updateDisplay();
+            updateStatus(`Captured: ${code}`, true);
+            playBeep();
         }
 
-        function exportReset() {
+        function updateDisplay() {
+            const list = document.getElementById('resultsList');
+            const count = document.getElementById('totalCount');
 
-            let text =
-                document.getElementById("list").value.trim();
+            count.textContent = scanned.length;
 
-            if (!text) {
-                alert("Nothing to export");
+            if (scanned.length === 0) {
+                list.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <p>No data captured yet</p>
+          </div>
+        `;
+            } else {
+                list.innerHTML = scanned.map((item, index) => `
+          <div class="result-item">
+            <span class="result-index">#${String(index + 1).padStart(3, '0')}</span>
+            <span class="result-code">${item.code}</span>
+            <span class="result-time">${item.time}</span>
+          </div>
+        `).reverse().join('');
+            }
+        }
+
+        function updateStatus(message, isActive) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+
+            text.textContent = message;
+
+            if (isActive) {
+                indicator.classList.add('active');
+            } else {
+                indicator.classList.remove('active');
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('sessionTime').textContent =
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        async function exportToSheets() {
+            const url = document.getElementById('sheetsUrl').value.trim();
+
+            if (!url) {
+                showMessage("Please enter a Google Sheets URL", "error");
                 return;
             }
 
-            navigator.clipboard.writeText(text);
+            if (scanned.length === 0) {
+                showMessage("No data to export", "error");
+                return;
+            }
 
-            alert("Copied!");
+            // Extract spreadsheet ID from URL
+            const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+            if (!match) {
+                showMessage("Invalid Google Sheets URL format", "error");
+                return;
+            }
 
-            scanned = [];
-            updateList();
+            const spreadsheetId = match[1];
+            const data = scanned.map((item, index) => ({
+                No: index + 1,
+                Barcode: item.code,
+                Time: item.time,
+                Date: item.date
+            }));
+
+            // Create instructions for user
+            const csvData = convertToCSV(data);
+            await navigator.clipboard.writeText(csvData);
+
+            showMessage("Data copied! Open your Google Sheet and paste (Ctrl+V)", "success");
+
+            // Open Google Sheets in new tab
+            window.open(url, '_blank');
         }
 
-    </script>
+        async function copyToClipboard() {
+            if (scanned.length === 0) {
+                showMessage("No data to copy", "error");
+                return;
+            }
 
+            const data = scanned.map((item, index) =>
+                `${index + 1}\t${item.code}\t${item.time}\t${item.date}`
+            ).join('\n');
+
+            const header = 'No.\tBarcode\tTime\tDate\n';
+            const fullData = header + data;
+
+            try {
+                await navigator.clipboard.writeText(fullData);
+                showMessage(`Copied ${scanned.length} items to clipboard`, "success");
+            } catch (e) {
+                showMessage("Failed to copy to clipboard", "error");
+            }
+        }
+
+        function exportExcel() {
+            if (scanned.length === 0) {
+                showMessage("No data to export", "error");
+                return;
+            }
+
+            const data = scanned.map((item, index) => ({
+                'No.': index + 1,
+                'Barcode': item.code,
+                'Time': item.time,
+                'Date': item.date
+            }));
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            ws['!cols'] = [
+                { wch: 8 },
+                { wch: 25 },
+                { wch: 15 },
+                { wch: 15 }
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Scanned Barcodes");
+
+            const filename = `barcodes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(wb, filename);
+
+            showMessage(`Exported to ${filename}`, "success");
+        }
+
+        function exportCSV() {
+            if (scanned.length === 0) {
+                showMessage("No data to export", "error");
+                return;
+            }
+
+            const data = scanned.map((item, index) => ({
+                No: index + 1,
+                Barcode: item.code,
+                Time: item.time,
+                Date: item.date
+            }));
+
+            const csv = convertToCSV(data);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `barcodes_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            showMessage("CSV file downloaded", "success");
+        }
+
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+
+            const headers = Object.keys(data[0]);
+            const rows = data.map(row =>
+                headers.map(header => {
+                    const value = row[header];
+                    return typeof value === 'string' && value.includes(',')
+                        ? `"${value}"`
+                        : value;
+                }).join(',')
+            );
+
+            return [headers.join(','), ...rows].join('\n');
+        }
+
+        function clearAll() {
+            if (scanned.length === 0) return;
+
+            if (confirm(`Clear all ${scanned.length} scanned items?`)) {
+                scanned = [];
+                updateDisplay();
+                showMessage("All data cleared", "success");
+
+                if (scanning) {
+                    sessionStart = Date.now();
+                }
+            }
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('exportStatus');
+            msg.textContent = text;
+            msg.className = `status-message ${type} show`;
+
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 4000);
+        }
+
+        function playBeep() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 1000;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.08);
+            } catch (e) {
+                // Silently fail if audio not supported
+            }
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
 </body>
 
 </html>
