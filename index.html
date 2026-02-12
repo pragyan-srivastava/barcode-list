@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Scanner</title>
+    <title>TPCR Barcode Attendance</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -15,17 +15,17 @@
         }
 
         :root {
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #141414;
-            --bg-tertiary: #1a1a1a;
-            --border-color: #2a2a2a;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0a0;
-            --accent: #00d4ff;
-            --accent-dim: #0099cc;
-            --success: #00ff88;
-            --danger: #ff4444;
-            --warning: #ffaa00;
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f5;
+            --border-color: #dee2e6;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --accent: #dc3545;
+            --accent-dim: #c82333;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
         }
 
         body {
@@ -66,12 +66,13 @@
         .logo-icon {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            color: white;
         }
 
         .logo-text h1 {
@@ -106,6 +107,7 @@
             padding: 24px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .card-header {
@@ -130,7 +132,7 @@
         .video-wrapper {
             position: relative;
             width: 100%;
-            background: #000;
+            background: #1a1a1a;
             border-radius: 8px;
             overflow: hidden;
             border: 1px solid var(--border-color);
@@ -160,7 +162,7 @@
             border: 2px solid var(--accent);
             border-radius: 8px;
             position: relative;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
         }
 
         .scan-line {
@@ -250,8 +252,9 @@
         }
 
         .btn:hover:not(:disabled) {
-            background: var(--border-color);
+            background: var(--bg-tertiary);
             border-color: var(--text-secondary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .btn:active:not(:disabled) {
@@ -266,24 +269,28 @@
         .btn-primary {
             background: var(--accent);
             border-color: var(--accent);
-            color: var(--bg-primary);
+            color: white;
             font-weight: 600;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
         }
 
         .btn-primary:hover:not(:disabled) {
             background: var(--accent-dim);
             border-color: var(--accent-dim);
+            box-shadow: 0 3px 6px rgba(220, 53, 69, 0.3);
         }
 
         .btn-danger {
             background: var(--danger);
             border-color: var(--danger);
             color: white;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
         }
 
         .btn-danger:hover:not(:disabled) {
-            background: #cc3333;
-            border-color: #cc3333;
+            background: #bd2130;
+            border-color: #b21f2d;
+            box-shadow: 0 3px 6px rgba(220, 53, 69, 0.3);
         }
 
         .results-section {
@@ -302,6 +309,7 @@
             padding: 16px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .stat-label {
@@ -332,7 +340,7 @@
         }
 
         .results-list::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
+            background: var(--bg-tertiary);
         }
 
         .results-list::-webkit-scrollbar-thumb {
@@ -355,7 +363,7 @@
         }
 
         .result-item:hover {
-            background: var(--bg-secondary);
+            background: var(--bg-tertiary);
         }
 
         .result-item:last-child {
@@ -461,14 +469,14 @@
         }
 
         .status-message.success {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
             color: var(--success);
         }
 
         .status-message.error {
-            background: rgba(255, 68, 68, 0.1);
-            border: 1px solid rgba(255, 68, 68, 0.3);
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
             color: var(--danger);
         }
 
@@ -504,10 +512,10 @@
         <div class="header">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon">⚡</div>
+                    <div class="logo-icon"><img src="icon.png" alt="📃"></div>
                     <div class="logo-text">
-                        <h1>Barcode Scanner</h1>
-                        <p>Professional Data Capture System</p>
+                        <h1>TPCR Barcode Attendance</h1>
+                        <p>Exam Attendance System</p>
                     </div>
                 </div>
             </div>
@@ -517,7 +525,7 @@
             <!-- Scanner Section -->
             <div class="card scanner-section">
                 <div class="card-header">
-                    <h2 class="card-title">Camera Feed</h2>
+                    <h2 class="card-title">Student ID Scanner</h2>
                 </div>
 
                 <div class="video-wrapper">
@@ -531,7 +539,7 @@
 
                 <div class="status-bar">
                     <div class="status-indicator" id="statusIndicator"></div>
-                    <span id="statusText">Ready to scan</span>
+                    <span id="statusText">Ready to scan ID</span>
                 </div>
 
                 <div class="controls-grid">
@@ -547,12 +555,12 @@
             <!-- Results Section -->
             <div class="card results-section">
                 <div class="card-header">
-                    <h2 class="card-title">Scanned Data</h2>
+                    <h2 class="card-title">Student Records</h2>
                 </div>
 
                 <div class="stats-bar">
                     <div class="stat-card">
-                        <div class="stat-label">Total Items</div>
+                        <div class="stat-label">Students Scanned</div>
                         <div class="stat-value" id="totalCount">0</div>
                     </div>
                     <div class="stat-card">
@@ -563,8 +571,8 @@
 
                 <div class="results-list" id="resultsList">
                     <div class="empty-state">
-                        <div class="empty-icon">📊</div>
-                        <p>No data captured yet</p>
+                        <div class="empty-icon">🎓</div>
+                        <p>No IDs scanned yet</p>
                     </div>
                 </div>
             </div>
@@ -577,30 +585,26 @@
 
                 <div class="export-grid">
                     <div class="input-group">
-                        <label class="input-label">Google Sheets URL (Optional)</label>
-                        <input type="text" class="input-field" id="sheetsUrl"
-                            placeholder="https://docs.google.com/spreadsheets/d/...">
+                        <label class="input-label">Venue (LT-Number)</label>
+                        <input type="text" class="input-field" id="ltNumber" placeholder="LT-16" required>
                     </div>
                     <div class="input-group">
                         <label class="input-label">Quick Actions</label>
                         <button class="btn" onclick="clearAll()">
-                            <span>🗑</span> Clear Data
+                            <span>🗑</span> Clear Records
                         </button>
                     </div>
                 </div>
 
                 <div class="export-buttons">
-                    <button class="btn" onclick="exportToSheets()">
-                        <span>📤</span> Send to Sheets
-                    </button>
                     <button class="btn" onclick="copyToClipboard()">
                         <span>📋</span> Copy to Clipboard
                     </button>
                     <button class="btn" onclick="exportExcel()">
-                        <span>📊</span> Download Excel
+                        Download Excel
                     </button>
                     <button class="btn" onclick="exportCSV()">
-                        <span>📄</span> Download CSV
+                        Download CSV
                     </button>
                 </div>
 
@@ -618,7 +622,7 @@
 
         async function start() {
             try {
-                updateStatus("Initializing camera...", false);
+                updateStatus("Initializing scanner...", false);
 
                 codeReader = new ZXing.BrowserMultiFormatReader();
                 const devices = await codeReader.listVideoInputDevices();
@@ -655,8 +659,8 @@
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('stopBtn').disabled = false;
 
-                updateStatus("Scanning active", true);
-                showMessage("Scanner is active", "success");
+                updateStatus("Ready to scan students", true);
+                showMessage("Scanner active - scan student ID cards", "success");
             } catch (e) {
                 console.error(e);
                 updateStatus("Camera error", false);
@@ -675,7 +679,7 @@
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
 
-            updateStatus("Scanner stopped", false);
+            updateStatus("Attendance recording paused", false);
         }
 
         function addScannedItem(code) {
@@ -688,7 +692,7 @@
             });
 
             updateDisplay();
-            updateStatus(`Captured: ${code}`, true);
+            updateStatus(`Recorded: ${code}`, true);
             playBeep();
         }
 
@@ -701,8 +705,8 @@
             if (scanned.length === 0) {
                 list.innerHTML = `
           <div class="empty-state">
-            <div class="empty-icon">📊</div>
-            <p>No data captured yet</p>
+            <div class="empty-icon">🎓</div>
+            <p>No students scanned yet</p>
           </div>
         `;
             } else {
@@ -746,60 +750,34 @@
             }
         }
 
-        async function exportToSheets() {
-            const url = document.getElementById('sheetsUrl').value.trim();
-
-            if (!url) {
-                showMessage("Please enter a Google Sheets URL", "error");
-                return;
+        function getLTNumber() {
+            const ltNumber = document.getElementById('ltNumber').value.trim();
+            if (!ltNumber) {
+                showMessage("Please enter Venue/LT Number before exporting", "error");
+                return null;
             }
-
-            if (scanned.length === 0) {
-                showMessage("No data to export", "error");
-                return;
-            }
-
-            // Extract spreadsheet ID from URL
-            const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-            if (!match) {
-                showMessage("Invalid Google Sheets URL format", "error");
-                return;
-            }
-
-            const spreadsheetId = match[1];
-            const data = scanned.map((item, index) => ({
-                No: index + 1,
-                Barcode: item.code,
-                Time: item.time,
-                Date: item.date
-            }));
-
-            // Create instructions for user
-            const csvData = convertToCSV(data);
-            await navigator.clipboard.writeText(csvData);
-
-            showMessage("Data copied! Open your Google Sheet and paste (Ctrl+V)", "success");
-
-            // Open Google Sheets in new tab
-            window.open(url, '_blank');
+            return ltNumber;
         }
 
         async function copyToClipboard() {
             if (scanned.length === 0) {
-                showMessage("No data to copy", "error");
+                showMessage("No student records to copy", "error");
                 return;
             }
 
+            const ltNumber = getLTNumber();
+            if (!ltNumber) return;
+
             const data = scanned.map((item, index) =>
-                `${index + 1}\t${item.code}\t${item.time}\t${item.date}`
+                `${index + 1}\t${ltNumber}\t${item.code}\t${item.time}\t${item.date}`
             ).join('\n');
 
-            const header = 'No.\tBarcode\tTime\tDate\n';
+            const header = 'No.\tVenue\tStudent ID\tTime\tDate\n';
             const fullData = header + data;
 
             try {
                 await navigator.clipboard.writeText(fullData);
-                showMessage(`Copied ${scanned.length} items to clipboard`, "success");
+                showMessage(`Copied ${scanned.length} student records to clipboard`, "success");
             } catch (e) {
                 showMessage("Failed to copy to clipboard", "error");
             }
@@ -807,13 +785,17 @@
 
         function exportExcel() {
             if (scanned.length === 0) {
-                showMessage("No data to export", "error");
+                showMessage("No student records to export", "error");
                 return;
             }
 
+            const ltNumber = getLTNumber();
+            if (!ltNumber) return;
+
             const data = scanned.map((item, index) => ({
                 'No.': index + 1,
-                'Barcode': item.code,
+                'Venue': ltNumber,
+                'Student ID': item.code,
                 'Time': item.time,
                 'Date': item.date
             }));
@@ -823,14 +805,15 @@
 
             ws['!cols'] = [
                 { wch: 8 },
+                { wch: 15 },
                 { wch: 25 },
                 { wch: 15 },
                 { wch: 15 }
             ];
 
-            XLSX.utils.book_append_sheet(wb, ws, "Scanned Barcodes");
+            XLSX.utils.book_append_sheet(wb, ws, "Exam Attendance");
 
-            const filename = `barcodes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            const filename = `TPCR_Exam_Attendance_${ltNumber}_${new Date().toISOString().slice(0, 10)}.xlsx`;
             XLSX.writeFile(wb, filename);
 
             showMessage(`Exported to ${filename}`, "success");
@@ -838,13 +821,17 @@
 
         function exportCSV() {
             if (scanned.length === 0) {
-                showMessage("No data to export", "error");
+                showMessage("No student records to export", "error");
                 return;
             }
 
+            const ltNumber = getLTNumber();
+            if (!ltNumber) return;
+
             const data = scanned.map((item, index) => ({
                 No: index + 1,
-                Barcode: item.code,
+                'Venue': ltNumber,
+                'Student ID': item.code,
                 Time: item.time,
                 Date: item.date
             }));
@@ -854,11 +841,11 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `barcodes_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.download = `TPCR_Exam_Attendance_${ltNumber}_${new Date().toISOString().slice(0, 10)}.csv`;
             a.click();
             window.URL.revokeObjectURL(url);
 
-            showMessage("CSV file downloaded", "success");
+            showMessage("Exam attendance CSV file downloaded", "success");
         }
 
         function convertToCSV(data) {
@@ -880,10 +867,10 @@
         function clearAll() {
             if (scanned.length === 0) return;
 
-            if (confirm(`Clear all ${scanned.length} scanned items?`)) {
+            if (confirm(`Clear all ${scanned.length} student records?`)) {
                 scanned = [];
                 updateDisplay();
-                showMessage("All data cleared", "success");
+                showMessage("All student records cleared", "success");
 
                 if (scanning) {
                     sessionStart = Date.now();
