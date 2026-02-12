@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner</title>
+
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #111;
+            color: white;
+            text-align: center;
+        }
+
+        video {
+            width: 95%;
+            max-width: 400px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .start {
+            background: #4CAF50;
+        }
+
+        .stop {
+            background: #f44336;
+        }
+
+        .export {
+            background: #2196F3;
+        }
+
+        textarea {
+            width: 95%;
+            max-width: 400px;
+            height: 180px;
+            background: #1e1e1e;
+            color: #00ffcc;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Barcode Scanner</h2>
+
+    <video id="video"></video>
+
+    <div>
+        <button class="start" onclick="start()">Start</button>
+        <button class="stop" onclick="stop()">Stop</button>
+        <button class="export" onclick="exportReset()">Export & Reset</button>
+    </div>
+
+    <p id="status">Camera stopped</p>
+
+    <textarea id="list"></textarea>
+
+    <script>
+
+        let codeReader;
+        let scanning = false;
+        let scanned = [];
+
+        async function start() {
+
+            try {
+
+                document.getElementById("status").innerText =
+                    "Requesting camera...";
+
+                codeReader = new ZXing.BrowserMultiFormatReader();
+
+                const devices =
+                    await codeReader.listVideoInputDevices();
+
+                if (devices.length === 0) {
+                    alert("No camera found");
+                    return;
+                }
+
+                const rear =
+                    devices[devices.length - 1].deviceId;
+
+                await codeReader.decodeFromVideoDevice(
+                    rear,
+                    'video',
+                    (result, err) => {
+
+                        if (result) {
+
+                            let text = result.text;
+
+                            document.getElementById("status").innerText =
+                                "Detected: " + text;
+
+                            if (!scanned.includes(text)) {
+                                scanned.push(text);
+                                updateList();
+                            }
+                        }
+
+                        if (err && !(err instanceof ZXing.NotFoundException)) {
+                            console.error(err);
+                        }
+
+                    }
+                );
+
+                scanning = true;
+
+                document.getElementById("status").innerText =
+                    "Scanning...";
+
+            }
+
+            catch (e) {
+
+                console.error(e);
+
+                document.getElementById("status").innerText =
+                    "Camera error: " + e.message;
+
+                alert("Camera blocked. Use HTTPS.");
+
+            }
+        }
+
+        function stop() {
+
+            if (!scanning) return;
+
+            codeReader.reset();
+
+            scanning = false;
+
+            document.getElementById("status").innerText =
+                "Stopped";
+        }
+
+        function updateList() {
+
+            document.getElementById("list").value =
+                scanned.join("\n");
+        }
+
+        function exportReset() {
+
+            let text =
+                document.getElementById("list").value.trim();
+
+            if (!text) {
+                alert("Nothing to export");
+                return;
+            }
+
+            navigator.clipboard.writeText(text);
+
+            alert("Copied!");
+
+            scanned = [];
+            updateList();
+        }
+
+    </script>
+
+</body>
+
+</html>
