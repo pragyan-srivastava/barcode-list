@@ -66,7 +66,6 @@
         .logo-icon {
             width: 40px;
             height: 40px;
-
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -233,6 +232,59 @@
             gap: 10px;
         }
 
+        .manual-entry-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .manual-entry-header {
+            margin-bottom: 15px;
+        }
+
+        .manual-entry-title {
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .manual-entry-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .manual-entry-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .validation-message {
+            display: block;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            min-height: 18px;
+        }
+
+        .validation-message.error {
+            color: var(--danger);
+        }
+
+        .validation-message.success {
+            color: var(--success);
+        }
+
+        select.input-field {
+            cursor: pointer;
+        }
+
+        select.input-field option {
+            padding: 8px;
+        }
+
         .btn {
             padding: 12px 20px;
             background: var(--bg-tertiary);
@@ -362,6 +414,11 @@
             transition: background 0.15s ease;
         }
 
+        .result-item.manual-entry {
+            background: rgba(220, 53, 69, 0.03);
+            border-left: 3px solid var(--danger);
+        }
+
         .result-item:hover {
             background: var(--bg-tertiary);
         }
@@ -382,6 +439,21 @@
             font-size: 0.9rem;
             color: var(--text-primary);
             font-weight: 500;
+        }
+
+        .result-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .result-reason {
+            font-size: 0.75rem;
+            color: var(--danger);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .result-time {
@@ -461,7 +533,8 @@
             font-size: 0.875rem;
             display: none;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            margin-top: 10px;
         }
 
         .status-message.show {
@@ -469,6 +542,7 @@
         }
 
         .status-message.success {
+
             background: rgba(40, 167, 69, 0.1);
             border: 1px solid rgba(40, 167, 69, 0.3);
             color: var(--success);
@@ -512,7 +586,7 @@
         <div class="header">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon"><img src="icon.png" alt="📃"></div>
+                    <div class="logo-icon"><img src="icon.png" alt="📄"></div>
                     <div class="logo-text">
                         <h1>TPCR Barcode Attendance</h1>
                         <p>Exam Attendance System</p>
@@ -539,7 +613,7 @@
 
                 <div class="status-bar">
                     <div class="status-indicator" id="statusIndicator"></div>
-                    <span id="statusText">Ready to scan ID</span>
+                    <span id="statusText">Ready to scan IDs</span>
                 </div>
 
                 <div class="controls-grid">
@@ -549,6 +623,37 @@
                     <button class="btn" onclick="stop()" id="stopBtn" disabled>
                         <span>⏸</span> Stop
                     </button>
+                </div>
+
+                <!-- Manual Entry Section -->
+                <div class="manual-entry-section">
+                    <div class="manual-entry-header">
+                        <h3 class="manual-entry-title">Manual Entry</h3>
+                        <span class="manual-entry-subtitle">For failed barcode scans</span>
+                    </div>
+
+                    <div class="manual-entry-form">
+                        <div class="input-group">
+                            <label class="input-label">Roll Number</label>
+                            <input type="text" class="input-field" id="manualRollNumber" placeholder="24DCS034"
+                                onkeypress="handleManualEntryKeyPress(event)">
+                            <span class="validation-message" id="rollValidation"></span>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">Reason</label>
+                            <select class="input-field" id="manualReason">
+                                <option value="">Select Reason</option>
+                                <option value="Unable to scan">Unable to scan</option>
+                                <option value="No ID">No ID</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="addManualEntry()"
+                            style="width: 100%; margin-top: 10px;">
+                            <span>+</span> Add Manual Entry
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -572,7 +677,7 @@
                 <div class="results-list" id="resultsList">
                     <div class="empty-state">
                         <div class="empty-icon">🎓</div>
-                        <p>No IDs scanned yet</p>
+                        <p>No students scanned yet</p>
                     </div>
                 </div>
             </div>
@@ -586,7 +691,7 @@
                 <div class="export-grid">
                     <div class="input-group">
                         <label class="input-label">Venue (LT-Number)</label>
-                        <input type="text" class="input-field" id="ltNumber" placeholder="LT-16" required>
+                        <input type="text" class="input-field" id="ltNumber" placeholder="LT-16">
                     </div>
                     <div class="input-group">
                         <label class="input-label">Quick Actions</label>
@@ -601,10 +706,10 @@
                         <span>📋</span> Copy to Clipboard
                     </button>
                     <button class="btn" onclick="exportExcel()">
-                        Download Excel
+                        <span>📊</span> Download Excel
                     </button>
                     <button class="btn" onclick="exportCSV()">
-                        Download CSV
+                        <span>📄</span> Download CSV
                     </button>
                 </div>
 
@@ -688,12 +793,84 @@
                 code: code,
                 time: timestamp.toLocaleTimeString(),
                 date: timestamp.toLocaleDateString(),
-                timestamp: timestamp
+                timestamp: timestamp,
+                isManual: false,
+                reason: null
             });
 
             updateDisplay();
             updateStatus(`Recorded: ${code}`, true);
             playBeep();
+        }
+
+        function validateRollNumber(rollNumber) {
+            // Pattern: [0-9]+[A-Za-z]+[0-9]
+            // Examples: 22CSE034, 21CSE078, 23ECE902
+            const pattern = /^[0-9]+[A-Za-z]+[0-9]+$/;
+            return pattern.test(rollNumber);
+        }
+
+        function handleManualEntryKeyPress(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addManualEntry();
+            }
+        }
+
+        function addManualEntry() {
+            const rollNumberInput = document.getElementById('manualRollNumber');
+            const reasonSelect = document.getElementById('manualReason');
+            const validationMsg = document.getElementById('rollValidation');
+
+            const rollNumber = rollNumberInput.value.trim();
+            const reason = reasonSelect.value;
+
+            // Validate roll number
+            if (!rollNumber) {
+                validationMsg.textContent = 'Please enter a roll number';
+                validationMsg.className = 'validation-message error';
+                return;
+            }
+
+            if (!validateRollNumber(rollNumber)) {
+                validationMsg.textContent = 'Invalid format. Expected: 24DCS034';
+                validationMsg.className = 'validation-message error';
+                return;
+            }
+
+            // Validate reason
+            if (!reason) {
+                validationMsg.textContent = '';
+                showMessage("Please select a reason for manual entry", "error");
+                return;
+            }
+
+            // Check for duplicates
+            if (scanned.some(item => item.code === rollNumber)) {
+                validationMsg.textContent = 'This roll number is already recorded';
+                validationMsg.className = 'validation-message error';
+                return;
+            }
+
+            // Add entry
+            const timestamp = new Date();
+            scanned.push({
+                code: rollNumber,
+                time: timestamp.toLocaleTimeString(),
+                date: timestamp.toLocaleDateString(),
+                timestamp: timestamp,
+                isManual: true,
+                reason: reason
+            });
+
+            updateDisplay();
+            showMessage(`Manual entry added: ${rollNumber}`, "success");
+
+            // Clear form
+            rollNumberInput.value = '';
+            reasonSelect.value = '';
+            validationMsg.textContent = '';
+            rollNumberInput.focus();
         }
 
         function updateDisplay() {
@@ -710,13 +887,23 @@
           </div>
         `;
             } else {
-                list.innerHTML = scanned.map((item, index) => `
-          <div class="result-item">
-            <span class="result-index">#${String(index + 1).padStart(3, '0')}</span>
-            <span class="result-code">${item.code}</span>
-            <span class="result-time">${item.time}</span>
-          </div>
-        `).reverse().join('');
+                list.innerHTML = scanned.map((item, index) => {
+                    const manualClass = item.isManual ? ' manual-entry' : '';
+                    const reasonBadge = item.reason
+                        ? `<span class="result-reason">⚠ ${item.reason}</span>`
+                        : '';
+
+                    return `
+            <div class="result-item${manualClass}">
+              <span class="result-index">#${String(index + 1).padStart(3, '0')}</span>
+              <div class="result-details">
+                <span class="result-code">${item.code}</span>
+                ${reasonBadge}
+              </div>
+              <span class="result-time">${item.time}</span>
+            </div>
+          `;
+                }).reverse().join('');
             }
         }
 
@@ -769,10 +956,10 @@
             if (!ltNumber) return;
 
             const data = scanned.map((item, index) =>
-                `${index + 1}\t${ltNumber}\t${item.code}\t${item.time}\t${item.date}`
+                `${index + 1}\t${ltNumber}\t${item.code}\t${item.time}\t${item.date}\t${item.reason || 'Scanned'}`
             ).join('\n');
 
-            const header = 'No.\tVenue\tStudent ID\tTime\tDate\n';
+            const header = 'No.\tVenue\tStudent ID\tTime\tDate\tEntry Type\n';
             const fullData = header + data;
 
             try {
@@ -797,7 +984,8 @@
                 'Venue': ltNumber,
                 'Student ID': item.code,
                 'Time': item.time,
-                'Date': item.date
+                'Date': item.date,
+                'Entry Type': item.reason || 'Scanned'
             }));
 
             const wb = XLSX.utils.book_new();
@@ -808,7 +996,8 @@
                 { wch: 15 },
                 { wch: 25 },
                 { wch: 15 },
-                { wch: 15 }
+                { wch: 15 },
+                { wch: 20 }
             ];
 
             XLSX.utils.book_append_sheet(wb, ws, "Exam Attendance");
@@ -833,7 +1022,8 @@
                 'Venue': ltNumber,
                 'Student ID': item.code,
                 Time: item.time,
-                Date: item.date
+                Date: item.date,
+                'Entry Type': item.reason || 'Scanned'
             }));
 
             const csv = convertToCSV(data);
